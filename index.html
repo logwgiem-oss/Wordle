@@ -1,7 +1,10 @@
 <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><title>Wordle</title>
-<!-- App Icon links for Tab Switchers & Home Screens -->
+<!-- Links the App Manifest so your custom picture displays on your phone's home screen and switcher app logos -->
+<link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="apple-touch-icon" href="logo.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 :root{--correct:#6aaa64;--present:#c9b458;--absent:#787c7e;--dark-gray:#3a3a3c;--light-gray:#878a8c;}
 html,body{touch-action:manipulation;}
@@ -45,7 +48,7 @@ for(let t=0;t<5;t++){const tile=document.getElementById(`r-${currentRow}-t-${t}`
 if(guess===targetWord){gameOver=true;document.getElementById("next-btn").style.display="block";handleStreak();showAlert("🎉 Correct!");return;}
 if(currentRow===5){gameOver=true;document.getElementById("next-btn").style.display="block";handleStreak();showAlert(`Game Over! Word: ${targetWord}`);return;}currentRow++;currentTile=0;}
 function handleStreak(){const today=getTodayTimestamp();if(stats.lastPlayedDate!==today){stats.currentStreak++;if(stats.currentStreak>stats.maxStreak)stats.maxStreak=stats.currentStreak;}stats.lastPlayedDate=today;localStorage.setItem('wordle_stats',JSON.stringify(stats));updateStatsUI();}
-function updateKey(k,s){const b=document.getElementById(`key-${k}`);if (!b)return;if(s==="correct")b.style.backgroundColor="var(--correct)";else if(s==="present"&&b.style.backgroundColor!=="var(--correct)")b.style.backgroundColor="var(--present)";else if(s==="absent"&&b.style.backgroundColor!=="var(--correct)"&&b.style.backgroundColor!=="var(--present)")b.style.backgroundColor="var(--dark-gray)";}
+function updateKey(k,s){const b=document.getElementById(`key-${k}`);if(!b)return;if(s==="correct")b.style.backgroundColor="var(--correct)";else if(s==="present"&&b.style.backgroundColor!=="var(--correct)")b.style.backgroundColor="var(--present)";else if(s==="absent"&&b.style.backgroundColor!=="var(--correct)"&&b.style.backgroundColor!=="var(--present)")b.style.backgroundColor="var(--dark-gray)";}
 function startNextGame(){gameOver=false;currentRow=0;currentTile=0;document.getElementById("next-btn").style.display="none";document.getElementById("alert-banner").style.display="none";pickWord();createGrid();createKeyboard();}
 function showAlert(m){const b=document.getElementById("alert-banner");b.innerText=m;b.style.display="block";}
 function updateStatsUI(){document.getElementById("current-streak").innerText=stats.currentStreak;document.getElementById("max-streak").innerText=stats.maxStreak;}
