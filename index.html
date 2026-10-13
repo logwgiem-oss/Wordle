@@ -1,13 +1,12 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><title>Wordle App</title>
-<!-- PICTURE OPTION 1: Browser tab icon and link preview image links go here -->
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"><title>Wordle</title>
+<!-- App Icon links for Tab Switchers & Home Screens -->
 <link rel="icon" type="image/png" href="logo.png">
-<meta property="og:image" content="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
 <style>
 :root{--correct:#6aaa64;--present:#c9b458;--absent:#787c7e;--dark-gray:#3a3a3c;--light-gray:#878a8c;}
 html,body{touch-action:manipulation;}
 body{font-family:sans-serif;background-color:#121213;color:white;display:flex;flex-direction:column;align-items:center;padding:10px;margin:0;-webkit-text-size-adjust:none;}
 header{border-bottom:1px solid var(--dark-gray);width:100%;max-width:500px;text-align:center;}
-.app-logo{max-width:180px;height:auto;margin:10px 0;}
 .stats-container{display:flex;gap:20px;margin:10px 0;background:#1a1a1b;padding:10px;border-radius:8px;border:1px solid var(--dark-gray);}
 .stat-box{text-align:center;}.stat-value{font-size:1.5rem;font-weight:bold;}.stat-label{font-size:0.75rem;color:var(--light-gray);text-transform:uppercase;}
 #alert-banner{background-color:#ba3c3c;padding:10px;border-radius:5px;margin-bottom:15px;display:none;text-align:center;max-width:400px;font-weight:bold;}
@@ -19,12 +18,7 @@ header{border-bottom:1px solid var(--dark-gray);width:100%;max-width:500px;text-
 .key{background-color:var(--absent);color:white;border:0;height:58px;border-radius:4px;cursor:pointer;font-weight:bold;flex:1;display:flex;justify-content:center;align-items:center;text-transform:uppercase;touch-action:manipulation;}
 .key.wide{flex:1.5;font-size:0.9rem;}.tile.correct{background-color:var(--correct);border-color:var(--correct);}
 .tile.present{background-color:var(--present);border-color:var(--present);}.tile.absent{background-color:var(--dark-gray);border-color:var(--dark-gray);}.tile.active{border-color:var(--light-gray);}
-</style></head><body>
-<header>
-    <!-- PICTURE OPTION 2: If you want a visual logo banner instead of the text heading, change "logo.png" to your image name -->
-    <img src="logo.png" alt="Wordle Logo" class="app-logo" onerror="this.style.display='none'; document.getElementById('alt-title').style.display='block';">
-    <h1 id="alt-title" style="display:none; margin:10px 0;">WORDLE</h1>
-</header>
+</style></head><body><header><h1 style="margin:10px 0;">WORDLE</h1></header>
 <div class="stats-container">
 <div class="stat-box"><div id="current-streak" class="stat-value">0</div><div class="stat-label">Daily Streak</div></div>
 <div class="stat-box"><div id="max-streak" class="stat-value">0</div><div class="stat-label">Max Streak</div></div>
@@ -51,9 +45,8 @@ for(let t=0;t<5;t++){const tile=document.getElementById(`r-${currentRow}-t-${t}`
 if(guess===targetWord){gameOver=true;document.getElementById("next-btn").style.display="block";handleStreak();showAlert("🎉 Correct!");return;}
 if(currentRow===5){gameOver=true;document.getElementById("next-btn").style.display="block";handleStreak();showAlert(`Game Over! Word: ${targetWord}`);return;}currentRow++;currentTile=0;}
 function handleStreak(){const today=getTodayTimestamp();if(stats.lastPlayedDate!==today){stats.currentStreak++;if(stats.currentStreak>stats.maxStreak)stats.maxStreak=stats.currentStreak;}stats.lastPlayedDate=today;localStorage.setItem('wordle_stats',JSON.stringify(stats));updateStatsUI();}
-function updateKey(k,s){const b=document.getElementById(`key-${k}`);if(!b)return;if(s==="correct")b.style.backgroundColor="var(--correct)";else if(s==="present"&&b.style.backgroundColor!=="var(--correct)")b.style.backgroundColor="var(--present)";else if(s==="absent"&&b.style.backgroundColor!=="var(--correct)"&&b.style.backgroundColor!=="var(--present)")b.style.backgroundColor="var(--dark-gray)";}
+function updateKey(k,s){const b=document.getElementById(`key-${k}`);if (!b)return;if(s==="correct")b.style.backgroundColor="var(--correct)";else if(s==="present"&&b.style.backgroundColor!=="var(--correct)")b.style.backgroundColor="var(--present)";else if(s==="absent"&&b.style.backgroundColor!=="var(--correct)"&&b.style.backgroundColor!=="var(--present)")b.style.backgroundColor="var(--dark-gray)";}
 function startNextGame(){gameOver=false;currentRow=0;currentTile=0;document.getElementById("next-btn").style.display="none";document.getElementById("alert-banner").style.display="none";pickWord();createGrid();createKeyboard();}
 function showAlert(m){const b=document.getElementById("alert-banner");b.innerText=m;b.style.display="block";}
 function updateStatsUI(){document.getElementById("current-streak").innerText=stats.currentStreak;document.getElementById("max-streak").innerText=stats.maxStreak;}
 </script></body></html>
-
