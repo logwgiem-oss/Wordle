@@ -23,7 +23,13 @@ header{border-bottom:1px solid var(--dark-gray);width:100%;max-width:500px;text-
 let WORDS=[];let targetWord="",currentRow=0,currentTile=0,gameOver=false;
 let stats=JSON.parse(localStorage.getItem('wordle_stats'))||{currentStreak:0,maxStreak:0,lastPlayedDate:null};
 window.onload=async()=>{
-try{const res=await fetch('words.txt');const text=await res.text();WORDS=text.split('\n').map(w=>w.trim().toLowerCase()).filter(w=>w.length===5);}catch(e){showAlert("⚠️ Failed to load words.txt file.");return;}
+try{
+    const res=await fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/words');
+    const text=await res.text();
+    WORDS=text.split('\n').map(w=>w.trim().toLowerCase()).filter(w=>w.length===5);
+}catch(e){
+    showAlert("⚠️ Dictionary failed to load. Check internet connection."); return;
+}
 if(stats.lastPlayedDate){if((getTodayTimestamp()-stats.lastPlayedDate)/86400000>1){stats.currentStreak=0;localStorage.setItem('wordle_stats',JSON.stringify(stats));showAlert("💔 Streak Lost! You forgot to play yesterday.");}}
 pickWord();createGrid();createKeyboard();updateStatsUI();};
 function getTodayTimestamp(){const d=new Date();d.setHours(0,0,0,0);return d.getTime();}
@@ -45,4 +51,5 @@ function startNextGame(){gameOver=false;currentRow=0;currentTile=0;document.getE
 function showAlert(m){const b=document.getElementById("alert-banner");b.innerText=m;b.style.display="block";}
 function updateStatsUI(){document.getElementById("current-streak").innerText=stats.currentStreak;document.getElementById("max-streak").innerText=stats.maxStreak;}
 </script></body></html>
+
 
