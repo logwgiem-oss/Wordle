@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Wordle Clone</title>
+    <style>
+        :root { --correct: #6aaa64; --present: #c9b458; --absent: #787c7e; --dark-gray: #3a3a3c; --light-gray: #878a8c; }
+        body { font-family: sans-serif; background-color: #121213; color: white; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
+        header { border-bottom: 1px solid var(--dark-gray); width: 100%; max-width: 500px; text-align: center; }
+        .stats-container { display: flex; gap: 20px; margin: 15px 0; background: #1a1a1b; padding: 10px; border-radius: 8px; }
+        .stat-box { text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; }
+        .stat-label { font-size: 0.75rem; color: var(--light-gray); text-transform: uppercase; }
+        #alert-banner { background-color: #ba3c3c; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none; text-align: center; max-width: 400px; font-weight: bold; }
+        #grid { display: grid; grid-template-rows: repeat(6, 1fr); grid-gap: 5px; margin-bottom: 20px; }
+        .row { display: grid; grid-template-columns: repeat(5, 1fr); grid-gap: 5px; }
+        .tile { width: 50px; height: 50px; border: 2px solid var(--dark-gray); display: inline-flex; justify-content: center; align-items: center; font-size: 1.8rem; font-weight: bold; text-transform: uppercase; }
+        #keyboard { display: grid; grid-gap: 6px; width: 100%; max-width: 500px; }
+        .kb-row { display: flex; justify-content: center; gap: 4px; }
+        .key { background-color: var(--absent); color: white; border: 0; height: 58px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1; display: flex; justify-content: center; align-items: center; text-transform: uppercase; }
+        .key.wide { flex: 1.5; font-size: 0.9rem; }
+        .tile.correct { background-color: var(--correct); border-color: var(--correct); }
+        .tile.present { background-color: var(--present); border-color: var(--present); }
+        .tile.absent { background-color: var(--dark-gray); border-color: var(--dark-gray); }
+        .tile.active { border-color: var(--light-gray); }
+    </style>
+</head>
+<body>
+    <header><h1>WORDLE</h1></header>
+    <div class="stats-container">
+        <div class="stat-box"><div id="current-streak" class="stat-value">0</div><div class="stat-label">Streak</div></div>
+        <div class="stat-box"><div id="max-streak" class="stat-value">0</div><div class="stat-label">Max</div></div>
+    </div>
+    <div id="alert-banner"></div>
+    <div id="grid"></div>
+    <div id="keyboard">
+        <div class="kb-row" id="row1"></div>
+        <div class="kb-row" id="row2"></div>
+        <div class="kb-row" id="row3"></div>
+    </div>
+
+    <script>
+        const WORDS = ["apple", "beach", "crane", "dance", "eagle", "flame", "giant", "house", "image", "juice", "koala", "lemon", "mouse", "night", "onion", "paper", "queen", "river", "smile", "tiger", "unite", "voice", "water", "young", "zebra", "about", "above", "after", "again", "agent", "agree", "ahead", "alarm", "alive", "allow", "alone", "along", "alter", "among", "anger", "angle", "angry", "apart", "apply", "arena", "argue", "arise", "array", "arrow", "aside", "asset", "audio", "audit", "avoid", "award", "aware", "awful", "baker", "bases", "basic", "basis", "basin", "buyer", "brave", "brief", "broad", "bring", "blind", "block", "brown", "board", "boast", "bonus", "bound", "brain", "brand", "bread", "break", "brick", "brush", "build", "built", "bunch", "cable", "camel", "canal", "candy", "cards", "carry", "carve", "cases", "catch", "cause", "cedar", "chain", "chair", "chalk"];
+        let targetWord = ""; let currentRow = 0; let currentTile = 0; let gameOver = false;
+        let stats = JSON.parse(localStorage.getItem('wordle_stats')) || { currentStreak: 0, maxStreak: 0, lastPlayedDate: null, lastGameStatus: null };
+
+        window.onload = () => { initStreakCheck(); initWord(); createGrid(); createKeyboard(); updateStatsUI(); };
+
+        function initStreakCheck() {
+            if (!stats.lastPlayedDate) return;
+            const todayTimestamp = getTodayTimestamp();
+            const daysDifference = (todayTimestamp - stats.lastPlayedDate) / 86400000;
+            if (daysDifference > 1) {
+                stats.currentStreak = 0;
+                localStorage.setItem('wordle_stats', JSON.stringify(stats));
+                showAlert("💔 Streak Lost! You missed playing yesterday.");
+            } else if (daysDifference === 0 && stats.lastGameStatus === "lost") {
+                showAlert("❌ Streak Reset! You lost today's game.");
+                gameOver = true;
+            } else if (daysDifference === 0 && stats.lastGameStatus === "won") {
+                gameOver = true;
+                showAlert("🎉 You already solved today's puzzle!");
+            }
+        }
+
+        function getTodayTimestamp() { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+        function initWord() { const todayIndex = Math.floor(getTodayTimestamp() / 86400000); targetWord = WORDS[todayIndex % WORDS.length].toUpperCase(); }
+
+        function createGrid() {
+            const grid = document.getElementById("grid");
+            for (let r = 0; r < 6; r++) {
+                let rowElement = document.createElement("div"); rowElement.className = "row";
+                for (let t = 0; t < 5; t++) {
+                    let tileElement = document.createElement("div"); tileElement.className = "tile";
+                    tileElement.id = `r-${r}-t-${t}`; rowElement.appendChild(tileElement);
+                }
+                grid.appendChild(rowElement);
+            }
+        }
+
+        function createKeyboard() {
+            const layouts = [["q","w","e","r","t","y","u","i","o","p"], ["a","s","d","f","g","h","j","k","l"], ["ENTER", "z","x","c","v","b","n","m", "BACK"]];
+            layouts.forEach((row, rowIndex) => {
+                const rowContainer = document.getElementById(`row${rowIndex + 1}`);
+                row.forEach(key => {
+                    const button = document.createElement("button"); button.innerText = key; button.className = "key";
+                    if (key === "ENTER" || key === "BACK") button.classList.add("wide");
+                    button.onclick = () => handleKeyInput(key); rowContainer.appendChild(button);
+                });
+            });
+            document.addEventListener("keydown", (e) => {
+                if (gameOver) return;
+                if (e.key === "Enter") handleKeyInput("ENTER");
+                else if (e.key === "Backspace") handleKeyInput("BACK");
+                else if (/^[a-zA-Z]\$/.test(e.key)) handleKeyInput(e.key.toLowerCase());
+            });
+        }
+
+        function handleKeyInput(key) {
+            if (gameOver) return;
+            if (key === "BACK") {
+                if (currentTile > 0) {
+                    currentTile--; const tile = document.getElementById(`r-${currentRow}-t-${currentTile}`);
+                    tile.innerText = ""; tile.classList.remove("active");
+                }
+            } else if (key === "ENTER") {
+                if (currentTile === 5) evaluateGuess(); else showAlert("Not enough letters!");
+            } else if (currentTile < 5) {
+                const tile = document.getElementById(`r-${currentRow}-t-${currentTile}`);
+                tile.innerText = key; tile.classList.add("active"); currentTile++;
+            }
+        }
+
+        function evaluateGuess() {
+            let guess = "";
+            for (let t = 0; t < 5; t++) guess += document.getElementById(`r-${currentRow}-t-${t}`).innerText;
+            let targetLetters = targetWord.split("");
+            for (let t = 0; t < 5; t++) {
+                const tile = document.getElementById(`r-${currentRow}-t-${t}`);
+                if (guess[t] === targetWord[t]) { tile.classList.add("correct"); targetLetters[t] = null; }
+            }
+            for (let t = 0; t < 5; t++) {
+                const tile = document.getElementById(`r-${currentRow}-t-${t}`);
+                if (tile.classList.contains("correct")) continue;
+                const idx = targetLetters.indexOf(guess[t]);
+                if (idx > -1) { tile.classList.add("present"); targetLetters[idx] = null; } else { tile.classList.add("absent"); }
+            }
+            if (guess === targetWord) {
+                gameOver = true; stats.currentStreak++;
+                if (stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
+                saveStats("won"); showAlert("🎉 Magnificent! Streak saved!"); return;
+            }
+            if (currentRow === 5) {
+                gameOver = true; stats.currentStreak = 0; saveStats("lost");
+                showAlert(`💥 Streak Lost! The word was: ${targetWord}`); return;
+            }
+            currentRow++; currentTile = 0;
+        }
+
+        function saveStats(status) { stats.lastPlayedDate = getTodayTimestamp(); stats.lastGameStatus = status; localStorage.setItem('wordle_stats', JSON.stringify(stats)); updateStatsUI(); }
+        function showAlert(msg) { const banner = document.getElementById("alert-banner"); banner.innerText = msg; banner.style.display = "block"; }
+        function updateStatsUI() { document.getElementById("current-streak").innerText = stats.currentStreak; document.getElementById("max-streak").innerText = stats.maxStreak; }
+    </script>
+</body>
+</html>
