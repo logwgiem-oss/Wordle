@@ -20,10 +20,12 @@ header{border-bottom:1px solid var(--dark-gray);width:100%;max-width:500px;text-
 </div><button id="next-btn" onclick="startNextGame()">Play Next Word</button><div id="alert-banner"></div><div id="grid"></div>
 <div id="keyboard"><div class="kb-row" id="row1"></div><div class="kb-row" id="row2"></div><div class="kb-row" id="row3"></div></div>
 <script>
-const WORDS=["apple","beach","crane","dance","eagle","flame","giant","house","image","juice","koala","lemon","mouse","night","onion","paper","queen","river","smile","tiger","unite","voice","water","young","zebra","about","above","after","again","agent","agree","ahead","alarm","alive","allow","alone","along","alter","among","anger","angle","angry","apart","apply","arena","argue","arise","array","arrow","aside","asset","audio","audit","avoid","award","aware","awful","baker","bases","basic","basis","basin","buyer","brave","brief","broad","bring","blind","block","brown","board","boast","bonus","bound","brain","brand","bread","break","brick","brush","build","built","bunch","cable","camel","canal","candy","cards","carry","carve","cases","catch","cause","cedar","chain","chair","chalk"];
-let targetWord="",currentRow=0,currentTile=0,gameOver=false;
+let WORDS=[];let targetWord="",currentRow=0,currentTile=0,gameOver=false;
 let stats=JSON.parse(localStorage.getItem('wordle_stats'))||{currentStreak:0,maxStreak:0,lastPlayedDate:null};
-window.onload=()=>{if(stats.lastPlayedDate){if((getTodayTimestamp()-stats.lastPlayedDate)/86400000>1){stats.currentStreak=0;localStorage.setItem('wordle_stats',JSON.stringify(stats));showAlert("💔 Streak Lost! You forgot to play yesterday.");}}pickWord();createGrid();createKeyboard();updateStatsUI();};
+window.onload=async()=>{
+try{const res=await fetch('words.txt');const text=await res.text();WORDS=text.split('\n').map(w=>w.trim().toLowerCase()).filter(w=>w.length===5);}catch(e){showAlert("⚠️ Failed to load words.txt file.");return;}
+if(stats.lastPlayedDate){if((getTodayTimestamp()-stats.lastPlayedDate)/86400000>1){stats.currentStreak=0;localStorage.setItem('wordle_stats',JSON.stringify(stats));showAlert("💔 Streak Lost! You forgot to play yesterday.");}}
+pickWord();createGrid();createKeyboard();updateStatsUI();};
 function getTodayTimestamp(){const d=new Date();d.setHours(0,0,0,0);return d.getTime();}
 function pickWord(){targetWord=WORDS[Math.floor(Math.random()*WORDS.length)].toUpperCase();}
 function createGrid(){const g=document.getElementById("grid");g.innerHTML="";for(let r=0;r<6;r++){let row=document.createElement("div");row.className="row";for(let t=0;t<5;t++){let tile=document.createElement("div");tile.className="tile";tile.id=`r-${r}-t-${t}`;row.appendChild(tile);}g.appendChild(row);}}
@@ -43,3 +45,4 @@ function startNextGame(){gameOver=false;currentRow=0;currentTile=0;document.getE
 function showAlert(m){const b=document.getElementById("alert-banner");b.innerText=m;b.style.display="block";}
 function updateStatsUI(){document.getElementById("current-streak").innerText=stats.currentStreak;document.getElementById("max-streak").innerText=stats.maxStreak;}
 </script></body></html>
+
